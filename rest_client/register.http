@@ -1,0 +1,43 @@
+### Test successful registration
+POST http://localhost:3000/api/users/auth/register
+Content-Type: application/json
+
+{
+    "name": "testuser",
+    "email": "testuser@example.com",
+    "password": "123456789"
+}
+
+###
+
+### Test registration with missing fields
+POST http://localhost:3000/api/users/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser2"
+}
+
+###
+
+### Test registration with existing email
+POST http://localhost:3000/api/users/auth/register
+Content-Type: application/json
+
+{
+    "name": "testuser3",
+    "email": "ra@gmail.com",
+    "password": "123456"
+}
+
+###
+
+### Test registration with weak password
+POST http://localhost:3000/api/users/auth/register
+Content-Type: application/json
+
+{
+    "name": "testuser4",
+    "email": "testuser4@example.com",
+    "password": "123"
+}

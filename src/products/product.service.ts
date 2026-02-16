@@ -1,43 +1,79 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateProductDto, PriceQueryDto } from './dtos/create-product.dto';
-
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
+import { CreateProductDto } from './dtos/create-product.dto';
+import { PriceQueryDto } from './dtos/price-query.dto';
+import { Repository } from 'typeorm';
+import { Product } from './entity/product.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Category } from 'src/Category/entity/Category.entity';
 
 @Injectable()
 export class ProductService {
-  private products: Product[] = [];
+  // Injecting the Product repository
+  constructor(
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+  ) {}
 
-  createProduct(productdata: CreateProductDto) {
-    const newProduct: Product = {
-      id: this.products.length + 1,
-      name: productdata.name,
-      price: Number(productdata.price),
-    };
-    this.products.push(newProduct);
-    return {
-      message: 'Product added successfully',
-      data: newProduct,
-      allData: this.products,
-    };
-  }
+  // Create a new product
+  public async createProduct(productdata: CreateProductDto) {
+    const categoryId = parseInt(String(productdata.categoryId));
 
-  getProducts(query: PriceQueryDto) {
-    const { minPrice, maxPrice } = query;
-    if (maxPrice && minPrice) {
-      return this.products.filter(
-        (prod) => prod.price <= maxPrice && prod.price >= minPrice,
-      );
+    // لازم await عشان ترجع object مش Promise
+    const category = await this.productRepository.manager
+      .getRepository(Category)
+      .exists({ where: { id: categoryId } });
+
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
     }
-    return this.products;
+    console.log('productdata', productdata);
+
+    const newProduct = this.productRepository.create({
+      ...productdata,
+      categoryId, // هنا بنربط relation
+    });
+
+    console.log('newProduct', newProduct);
+
+    return await this.productRepository.save(newProduct);
   }
 
-  getProductById(id: number) {
-    const product = this.products.find((prod) => prod.id === id);
-    if (!product) throw new NotFoundException('Product not found');
+  // Get all products with optional price filtering
+  public async getProducts(query: PriceQueryDto) {
+    const { minPrice, maxPrice } = query;
+
+    const qb = this.productRepository.createQueryBuilder('product');
+
+    if (minPrice !== undefined)
+      qb.andWhere('product.price >= :minPrice', { minPrice });
+    if (maxPrice !== undefined)
+      qb.andWhere('product.price <= :maxPrice', { maxPrice });
+
+    return qb.getMany();
+  }
+
+  // Get a product by ID
+  public async getProductById(id: number) {
+    const product = await this.productRepository.findOneBy({ id });
+    if (product === null || product === undefined) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
     return product;
+  }
+
+  // Update a product by ID
+  public async updateProduct(id: number, updateData: CreateProductDto) {
+    const product = await this.getProductById(id);
+    product.title = updateData.title ?? product.title;
+    product.description = updateData.description ?? product.description;
+    product.price = updateData.price ?? product.price;
+
+    return this.productRepository.save(product);
+  }
+
+  // Delete a product by ID
+  public async deleteProduct(id: number) {
+    const product = await this.getProductById(id);
+    return this.productRepository.remove(product);
   }
 }
