@@ -24,12 +24,17 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+<<<<<<< HEAD
     "@nestjs/typeorm": "^11.0.0",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "dotenv": "^17.2.3",
     "pg": "^8.16.3",
+=======
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
+>>>>>>> 9da7de10b4354261d218503e971d0e0bdf0e4e92
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.28"
